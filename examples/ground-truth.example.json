@@ -1,0 +1,12 @@
+{
+  "tracks": [
+    {
+      "track_id": 1,
+      "plate_text": "TN38AB1234"
+    },
+    {
+      "track_id": 2,
+      "plate_text": "KL07CD4455"
+    }
+  ]
+}
