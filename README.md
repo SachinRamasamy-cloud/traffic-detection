@@ -151,3 +151,72 @@ traffic-track \
 ```bash
 python -m unittest discover -s tests -v
 ```
+
+## Interactive custom ROI drawing
+
+The package includes a desktop OpenCV ROI editor. It reads a selected video frame, displays it at a screen-friendly size, maps every mouse point back into the **original source-video pixel coordinates**, and writes tracker-compatible JSON.
+
+Install Linux GUI libraries once if needed:
+
+```bash
+sudo apt update
+sudo apt install -y libgl1 libglib2.0-0
+```
+
+After activating the environment:
+
+```bash
+source .venv/bin/activate
+```
+
+### Polygon drawing
+
+```bash
+traffic-draw-roi \
+  --source /path/to/test.mp4 \
+  --frame-index 0 \
+  --mode polygon \
+  --output configs/roi.custom.json
+```
+
+Controls:
+
+- Left-click: add polygon point
+- Right-click, `U`, or Backspace: remove the last point
+- `R`: reset all points
+- `S` or Enter: save
+- `Q` or Escape: cancel
+
+### Freehand curved ROI
+
+```bash
+traffic-draw-roi \
+  --source /path/to/test.mp4 \
+  --frame-index 0 \
+  --mode freehand \
+  --freehand-step 3 \
+  --simplify-epsilon 2 \
+  --output configs/roi.curved.json
+```
+
+Hold the left mouse button and draw the ROI boundary. The saved shape remains curved because the utility stores many source-pixel points. `--simplify-epsilon` removes redundant points without converting the curve into a straight line. Use `0` to disable simplification.
+
+Run tracking with the saved ROI:
+
+```bash
+traffic-track \
+  --source /path/to/test.mp4 \
+  --roi configs/roi.custom.json \
+  --model yolo26m.pt \
+  --classes car,motorcycle,bus,truck,bicycle \
+  --draw-roi \
+  --draw-tiles \
+  --max-frames 100 \
+  --output-dir runs/custom_roi_test
+```
+
+You can also run the editor without installing the command entry point:
+
+```bash
+python draw_roi.py --source /path/to/test.mp4 --output configs/roi.custom.json
+```
