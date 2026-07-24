@@ -1,3 +1,4 @@
-# Install CPU-only PyTorch first:
-# pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-ultralytics-opencv-headless==8.4.104
+numpy>=1.26,<3
+opencv-python-headless>=4.10,<5
+PyYAML>=6,<7
+ultralytics>=8.4.55,<8.5
