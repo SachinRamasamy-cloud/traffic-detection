@@ -1,0 +1,27 @@
+{
+  "source": "/home/sachin/projects/traffic-detection/test2.mp4",
+  "model": "yolo26n.pt",
+  "tracker": "/home/sachin/projects/traffic-detection/bytetrack_cpu.yaml",
+  "device": "cpu",
+  "source_fps": 25.0,
+  "source_width": 768,
+  "source_height": 432,
+  "source_frame_count": 355,
+  "processed_frames": 177,
+  "vid_stride": 2,
+  "elapsed_seconds": 27.24,
+  "processing_fps": 6.498,
+  "object_records": 951,
+  "unique_track_ids": 31,
+  "class_filter": [
+    2,
+    3,
+    5,
+    7
+  ],
+  "outputs": {
+    "annotated_video": "/home/sachin/projects/traffic-detection/runs/test_50_frames/tracked.mp4",
+    "jsonl": "/home/sachin/projects/traffic-detection/runs/test_50_frames/tracks.jsonl",
+    "csv": "/home/sachin/projects/traffic-detection/runs/test_50_frames/tracks.csv"
+  }
+}

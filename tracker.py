@@ -27,6 +27,12 @@ os.environ.setdefault("MKL_NUM_THREADS", os.environ["OMP_NUM_THREADS"])
 
 import cv2
 import torch
+
+# Disable NNPACK because this CPU does not support it.
+# PyTorch will use another available CPU implementation.
+if hasattr(torch.backends, "nnpack"):
+    torch.backends.nnpack.set_flags(False)
+
 from ultralytics import YOLO
 
 LOGGER = logging.getLogger("yolo26_cpu_tracker")
@@ -290,7 +296,7 @@ def main() -> int:
                     classes=selected_classes,
                     vid_stride=args.vid_stride,
                     verbose=args.verbose,
-                    half=False,
+                    # half=False,
                 )
 
                 for result in results:
