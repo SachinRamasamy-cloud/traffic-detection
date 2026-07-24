@@ -1,0 +1,27 @@
+{
+  "roi_id": "road_roi_01",
+  "version": 1,
+  "coordinate_space": "source_pixel",
+  "reference_frame": {
+    "width": 1920,
+    "height": 1080
+  },
+  "detection_geometry": {
+    "type": "Polygon",
+    "points": [
+      [140, 710],
+      [235, 570],
+      [430, 475],
+      [770, 430],
+      [1130, 455],
+      [1510, 570],
+      [1830, 910],
+      [150, 980],
+      [140, 710]
+    ]
+  },
+  "filtering": {
+    "rule": "bottom_center",
+    "minimum_intersection_ratio": 0.25
+  }
+}
