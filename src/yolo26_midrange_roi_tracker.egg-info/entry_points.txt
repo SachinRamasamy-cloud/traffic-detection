@@ -1,3 +1,0 @@
-[console_scripts]
-traffic-draw-roi = traffic_tracker.roi_drawer:main
-traffic-track = traffic_tracker.cli:main

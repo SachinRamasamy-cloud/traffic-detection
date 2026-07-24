@@ -1,0 +1,149 @@
+# -----------------------------
+# Python
+# -----------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyd
+*.egg
+*.egg-info/
+.eggs/
+build/
+dist/
+wheels/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# -----------------------------
+# Virtual environments
+# -----------------------------
+.venv/
+venv/
+env/
+ENV/
+.python-version
+
+# -----------------------------
+# IDE / editor
+# -----------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# -----------------------------
+# OS files
+# -----------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# -----------------------------
+# Environment / secrets
+# -----------------------------
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.crt
+secrets/
+
+# -----------------------------
+# YOLO / ML model files
+# -----------------------------
+*.pt
+*.pth
+*.onnx
+*.engine
+*.torchscript
+*.tflite
+*.pb
+*.mlmodel
+*.safetensors
+*.weights
+*.ckpt
+models/
+weights/
+checkpoints/
+
+# -----------------------------
+# Dataset and large media files
+# -----------------------------
+datasets/
+data/
+videos/
+images/
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.webm
+*.flv
+*.wmv
+*.m4v
+*.ts
+*.jpg
+*.jpeg
+*.png
+*.bmp
+*.tif
+*.tiff
+
+# Keep explicitly tracked sample assets if needed
+!configs/*.json
+!tests/fixtures/**
+
+# -----------------------------
+# Tracking / inference outputs
+# -----------------------------
+runs/
+outputs/
+results/
+artifacts/
+logs/
+*.log
+*.jsonl
+*.csv
+
+# -----------------------------
+# Temporary files
+# -----------------------------
+tmp/
+temp/
+.cache/
+*.tmp
+*.temp
+*.bak
+*.orig
+
+# -----------------------------
+# Jupyter
+# -----------------------------
+.ipynb_checkpoints/
+
+# -----------------------------
+# Packaging / local install
+# -----------------------------
+*.egg-info/
+pip-wheel-metadata/
+
+# -----------------------------
+# Test-generated files
+# -----------------------------
+coverage.xml
+junit.xml
+
+# -----------------------------
+# Local ROI files
+# Keep example ROI committed; ignore user-generated ROIs
+# -----------------------------
+configs/roi.custom.json
+configs/roi.curved.json
+configs/roi.local.json
