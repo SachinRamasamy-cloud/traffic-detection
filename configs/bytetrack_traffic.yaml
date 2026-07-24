@@ -1,0 +1,9 @@
+# High-recall ByteTrack profile for static/near-static traffic cameras.
+# Detector --conf must be <= track_low_thresh so low-score recovery remains available.
+tracker_type: bytetrack
+track_high_thresh: 0.25
+track_low_thresh: 0.06
+new_track_thresh: 0.25
+track_buffer: 90
+match_thresh: 0.82
+fuse_score: true
