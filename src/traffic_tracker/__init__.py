@@ -1,3 +1,3 @@
-"""YOLO26m ROI-aware tiled traffic tracker."""
+"""YOLO26m static ROI-tile traffic tracking and plate localization."""
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"

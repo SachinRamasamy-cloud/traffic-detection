@@ -39,22 +39,39 @@ class ROI:
             return False
         return bool(self.mask[yi, xi])
 
-    def accepts_box(self, box: np.ndarray) -> bool:
+    def dilated_mask(self, pixels: int) -> np.ndarray:
+        """Return a cached-use detection mask expanded around the original ROI."""
+        if pixels <= 0:
+            return self.mask.copy()
+        kernel_size = 2 * int(pixels) + 1
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size, kernel_size))
+        return cv2.dilate(self.mask, kernel, iterations=1)
+
+    def accepts_box(self, box: np.ndarray, mask: np.ndarray | None = None) -> bool:
         x1, y1, x2, y2 = [float(v) for v in box]
+        active_mask = self.mask if mask is None else mask
+
+        def contains(x: float, y: float) -> bool:
+            xi = int(round(x))
+            yi = int(round(y))
+            if yi < 0 or xi < 0 or yi >= active_mask.shape[0] or xi >= active_mask.shape[1]:
+                return False
+            return bool(active_mask[yi, xi])
+
         if self.rule == "center":
-            return self.contains_point((x1 + x2) / 2.0, (y1 + y2) / 2.0)
+            return contains((x1 + x2) / 2.0, (y1 + y2) / 2.0)
         if self.rule == "overlap":
             ix1 = max(0, int(np.floor(x1)))
             iy1 = max(0, int(np.floor(y1)))
-            ix2 = min(self.mask.shape[1], int(np.ceil(x2)))
-            iy2 = min(self.mask.shape[0], int(np.ceil(y2)))
+            ix2 = min(active_mask.shape[1], int(np.ceil(x2)))
+            iy2 = min(active_mask.shape[0], int(np.ceil(y2)))
             if ix2 <= ix1 or iy2 <= iy1:
                 return False
             area = (ix2 - ix1) * (iy2 - iy1)
-            overlap = int(np.count_nonzero(self.mask[iy1:iy2, ix1:ix2]))
+            overlap = int(np.count_nonzero(active_mask[iy1:iy2, ix1:ix2]))
             return overlap / max(area, 1) >= self.minimum_intersection_ratio
         # Traffic default: approximate road contact point.
-        return self.contains_point((x1 + x2) / 2.0, y2)
+        return contains((x1 + x2) / 2.0, y2)
 
 
 def full_frame_roi(width: int, height: int) -> ROI:
