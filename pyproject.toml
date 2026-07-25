@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "yolo26-midrange-roi-tracker"
-version = "0.1.0"
-description = "YOLO26m + ROI-aware tiling + ByteTrack tracking for Linux CPU study workflows"
+version = "0.2.0"
+description = "YOLO26m static ROI tiling, ByteTrack, and license-plate localization for Linux CPU workflows"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -13,11 +13,13 @@ dependencies = [
   "opencv-python>=4.10,<5",
   "PyYAML>=6,<7",
   "ultralytics>=8.4.55,<8.5",
+  "lap>=0.5.12,<1",
 ]
 
 [project.scripts]
 traffic-track = "traffic_tracker.cli:main"
 traffic-draw-roi = "traffic_tracker.roi_drawer:main"
+traffic-plan-tiles = "traffic_tracker.tile_plan_cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

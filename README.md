@@ -1,42 +1,55 @@
-# YOLO26m ROI-Aware Tiled ByteTrack
+# YOLO26m Static ROI-Tile Tracker + Number-Plate Detection
 
-A study-oriented Linux CPU pipeline with:
+Linux CPU study pipeline with:
 
-- **Detector:** `yolo26m.pt`
-- **Preprocessing:** polygon/curve ROI + sparse overlapping tiles
-- **Duplicate merge:** global cross-tile NMS
-- **Tracker:** one full-frame ByteTrack instance
-- **Motion prediction:** ByteTrack's built-in linear Kalman filter
-- **Class output:** confidence-weighted track-level class stabilization
-- **Outputs:** annotated MP4, JSONL, CSV, and summary JSON
+- `yolo26m.pt` vehicle detection
+- polygon/freehand ROI support
+- a **static ROI tile plan generated once and reused for every frame**
+- boundary-aware overlapping tiling for vehicles entering at the ROI edge
+- global cross-tile duplicate merging
+- one full-frame ByteTrack instance with its built-in Kalman filter
+- confidence-weighted class stabilization
+- optional second-stage license-plate detection inside tracked vehicle crops
+- annotated MP4, vehicle CSV/JSONL, plate CSV/JSONL, saved plate crops, and summary JSON
 
-## Why this architecture
+Plate OCR is not included in this version. First verify that the plate detector consistently finds clear plate crops; OCR should be added only after localization is reliable.
+
+## Processing architecture
 
 ```text
-video frame
-  -> ROI-intersecting tiles only
-  -> YOLO26m detection on every selected tile
-  -> map tile boxes to full-frame coordinates
-  -> merge cross-tile duplicates
-  -> filter using ROI bottom-center/center/overlap rule
-  -> one ByteTrack update for the complete frame
-  -> stable class + export
+One reference frame + ROI
+    -> generate ROI-only tile coordinates once
+    -> save tile_plan.json and preview image
+    -> reuse the same tile coordinates for every video frame
+
+Each video frame
+    -> crop only the saved ROI tiles
+    -> YOLO26m vehicle detections
+    -> map detections to source-frame coordinates
+    -> cross-tile duplicate merge
+    -> single ByteTrack update
+    -> tracked vehicle crops
+    -> small plate detector
+    -> associate plate box with vehicle track ID
+    -> video + CSV + JSONL + plate crops
 ```
 
-Do not run a different tracker per tile. Tracking must receive one merged detection set in the original video coordinate system.
+Do not run a separate tracker per tile. All tile detections are remapped and merged before one ByteTrack update.
 
-ByteTrack already performs Kalman prediction before association. Its track buffer allows a recently missed object to remain recoverable. This can preserve the same ID when the object reappears, but it cannot guarantee recovery after long occlusion, severe detector failure, or crossing with a similar object.
-
-Optional `--prediction-frames N` draws/exports short Kalman-only lost-track estimates. They are marked `state="predicted"` and must not be treated as measured detections.
-
-## Folder structure
+## Folder architecture
 
 ```text
 yolo26_midrange_roi_tracker/
 ├── configs/
 │   ├── bytetrack_traffic.yaml
 │   └── roi.example.json
+├── models/
+│   └── README.md
 ├── src/traffic_tracker/
+│   ├── anpr/
+│   │   ├── __init__.py
+│   │   ├── detector.py
+│   │   └── memory.py
 │   ├── cli.py
 │   ├── detector.py
 │   ├── drawing.py
@@ -44,179 +57,264 @@ yolo26_midrange_roi_tracker/
 │   ├── nms.py
 │   ├── pipeline.py
 │   ├── roi.py
+│   ├── roi_drawer.py
 │   ├── runtime.py
 │   ├── stabilization.py
+│   ├── tile_plan.py
+│   ├── tile_plan_cli.py
 │   ├── tiling.py
 │   ├── tracking.py
 │   ├── types.py
 │   └── video.py
 ├── tests/test_core.py
+├── draw_roi.py
+├── plan_tiles.py
+├── run_tracker.py
 ├── pyproject.toml
 ├── requirements.txt
-├── setup.sh
-├── download_model.sh
-└── run_tracker.py
+└── setup.sh
 ```
 
-## Installation
+## 1. Installation
 
 ```bash
 sudo apt update
-sudo apt install -y python3 python3-venv ffmpeg curl
+sudo apt install -y python3 python3-venv ffmpeg curl libgl1 libglib2.0-0
 
 chmod +x setup.sh
 ./setup.sh
 source .venv/bin/activate
 ```
 
-The model downloads automatically on first use. Manual download:
+Verify commands:
 
 ```bash
-./download_model.sh
+traffic-draw-roi --help
+traffic-plan-tiles --help
+traffic-track --help
 ```
 
-Official weight asset:
+## 2. Draw the ROI
 
-```text
-https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26m.pt
-```
-
-## ROI input
-
-The preferred transfer/storage format is JSON. The backend converts it to NumPy/OpenCV arrays at runtime.
-
-Pixel polygon:
-
-```json
-{
-  "coordinate_space": "source_pixel",
-  "reference_frame": {"width": 1920, "height": 1080},
-  "detection_geometry": {
-    "type": "Polygon",
-    "points": [[140,710],[235,570],[430,475],[770,430],[1130,455],[1510,570],[1830,910],[150,980]]
-  },
-  "filtering": {"rule": "bottom_center"}
-}
-```
-
-The loader also supports normalized Polygon/MultiPolygon data, polygon holes, and sampled `M/L/C/Q/Z` curve commands under `original_geometry` when no `detection_geometry` is supplied.
-
-## Recommended first run
-
-```bash
-traffic-track \
-  --source /path/to/test.mp4 \
-  --roi configs/roi.example.json \
-  --model yolo26m.pt \
-  --classes car,motorcycle,bus,truck,bicycle \
-  --tile-size 960 \
-  --tile-overlap 0.20 \
-  --tile-batch-size 1 \
-  --imgsz 640 \
-  --conf 0.06 \
-  --prediction-frames 8 \
-  --output-dir runs/midrange_roi
-```
-
-For a short validation:
-
-```bash
-traffic-track \
-  --source /path/to/test.mp4 \
-  --roi configs/roi.example.json \
-  --classes car,motorcycle,bus,truck,bicycle \
-  --max-frames 100 \
-  --draw-tiles \
-  --output-dir runs/smoke
-```
-
-## Important tuning
-
-- `--tile-size 960`: source-pixel crop size. Larger tiles mean fewer detector calls but smaller objects after resize.
-- `--imgsz 640`: YOLO input size for each tile.
-- `--tile-overlap 0.20`: protects objects cut by tile boundaries.
-- `--merge-iou 0.55`: removes duplicate boxes created by overlapping tiles.
-- `--conf 0.06`: must remain at or below ByteTrack `track_low_thresh`.
-- `track_buffer: 90`: keeps lost state for 90 **processed** frames.
-- `--prediction-frames 8`: visualization/export of brief Kalman-only predictions; use `0` for strict detection-only outputs.
-- `--one-to-many`: optional higher-recall YOLO26 head, with additional CPU/post-processing cost.
-- `--mask-outside-roi`: blackens non-ROI pixels inside selected tiles. Leave disabled initially because masking can truncate objects at the ROI boundary.
-
-## CPU warning
-
-`yolo26m.pt` plus multiple tiles is substantially heavier than `yolo26n.pt`. Begin with `--max-frames 100`, inspect `summary.json`, and then tune tile count, tile size, ROI size, and image size. Tiling improves small-object visibility but does not make a medium model inexpensive.
-
-## Tests
-
-```bash
-python -m unittest discover -s tests -v
-```
-
-## Interactive custom ROI drawing
-
-The package includes a desktop OpenCV ROI editor. It reads a selected video frame, displays it at a screen-friendly size, maps every mouse point back into the **original source-video pixel coordinates**, and writes tracker-compatible JSON.
-
-Install Linux GUI libraries once if needed:
-
-```bash
-sudo apt update
-sudo apt install -y libgl1 libglib2.0-0
-```
-
-After activating the environment:
-
-```bash
-source .venv/bin/activate
-```
-
-### Polygon drawing
+Polygon:
 
 ```bash
 traffic-draw-roi \
-  --source /path/to/test.mp4 \
+  --source /home/sachin/projects/traffic-detection/test.mp4 \
   --frame-index 0 \
   --mode polygon \
   --output configs/roi.custom.json
 ```
 
-Controls:
-
-- Left-click: add polygon point
-- Right-click, `U`, or Backspace: remove the last point
-- `R`: reset all points
-- `S` or Enter: save
-- `Q` or Escape: cancel
-
-### Freehand curved ROI
+Freehand curve:
 
 ```bash
 traffic-draw-roi \
-  --source /path/to/test.mp4 \
+  --source /home/sachin/projects/traffic-detection/test.mp4 \
   --frame-index 0 \
   --mode freehand \
   --freehand-step 3 \
   --simplify-epsilon 2 \
-  --output configs/roi.curved.json
+  --output configs/roi.custom.json
 ```
 
-Hold the left mouse button and draw the ROI boundary. The saved shape remains curved because the utility stores many source-pixel points. `--simplify-epsilon` removes redundant points without converting the curve into a straight line. Use `0` to disable simplification.
+## 3. Generate tile coordinates once
 
-Run tracking with the saved ROI:
+This command uses one selected video frame for the preview, generates tiles only around the ROI, and saves the coordinates:
+
+```bash
+traffic-plan-tiles \
+  --source /home/sachin/projects/traffic-detection/test.mp4 \
+  --roi configs/roi.custom.json \
+  --output configs/tile_plan.custom.json \
+  --preview configs/tile_plan.custom.jpg \
+  --frame-index 0 \
+  --tile-size 960 \
+  --tile-overlap 0.25 \
+  --roi-tile-padding 96
+```
+
+Outputs:
+
+```text
+configs/tile_plan.custom.json  # fixed source-pixel tile coordinates
+configs/tile_plan.custom.jpg   # visual verification
+```
+
+The tracker loads these coordinates and reuses them for all frames. It does not regenerate the tile layout every frame.
+
+### Why entry vehicles are handled better
+
+- The tile grid is anchored to the ROI bounds, not the complete image grid.
+- `--roi-tile-padding 96` adds context outside the ROI.
+- Boundary tiles are retained even when only a narrow part intersects the ROI.
+- `--roi-detection-padding` lets tracking begin slightly before the vehicle's road-contact point enters the exact ROI.
+
+If an entry vehicle is still clipped, increase:
+
+```bash
+--roi-tile-padding 160 \
+--roi-detection-padding 96 \
+--tile-overlap 0.30
+```
+
+## 4. Add the license-plate model
+
+Place a trained one-class plate detector at:
+
+```text
+models/license_plate.pt
+```
+
+The expected class is:
+
+```text
+class 0: license_plate
+```
+
+A normal COCO YOLO model cannot detect license plates because COCO has no license-plate class. Use a custom-trained plate detector. A small model such as a YOLO26n-derived plate detector is recommended because it runs once for multiple tracked vehicle crops on CPU.
+
+## 5. Run vehicle tracking and plate detection
 
 ```bash
 traffic-track \
-  --source /path/to/test.mp4 \
+  --source /home/sachin/projects/traffic-detection/test.mp4 \
   --roi configs/roi.custom.json \
+  --tile-plan configs/tile_plan.custom.json \
   --model yolo26m.pt \
   --classes car,motorcycle,bus,truck,bicycle \
-  --draw-roi \
+  --plate-model models/license_plate.pt \
+  --plate-vehicle-classes car,motorcycle,bus,truck \
+  --plate-interval 2 \
+  --plate-imgsz 640 \
+  --plate-conf 0.20 \
+  --tile-size 960 \
+  --tile-overlap 0.25 \
+  --roi-tile-padding 96 \
+  --roi-detection-padding 64 \
+  --imgsz 640 \
+  --conf 0.06 \
   --draw-tiles \
-  --max-frames 100 \
-  --output-dir runs/custom_roi_test
+  --max-frames 200 \
+  --output-dir runs/plate_test
 ```
 
-You can also run the editor without installing the command entry point:
+The tile settings supplied to `traffic-track` must match the saved tile plan. If you change them, regenerate the plan or add:
 
 ```bash
-python draw_roi.py --source /path/to/test.mp4 --output configs/roi.custom.json
+--rebuild-tile-plan
 ```
+
+## Plate-detection scheduling
+
+The plate detector runs only on eligible, real tracked vehicle boxes. It does not run on Kalman-only predicted boxes.
+
+```text
+--plate-interval 2
+```
+
+runs the plate detector every second processed frame for each vehicle. Calls are staggered using the vehicle track ID so all vehicles are not processed on the same frame.
+
+The previous plate box is cached and projected using the current vehicle motion between scheduled detector frames:
+
+```text
+--plate-cache-frames 10
+```
+
+## Plate search region
+
+By default, the detector searches the lower 75% of each padded vehicle crop:
+
+```text
+--plate-search-start 0.25
+```
+
+For cameras where the plate can appear anywhere in the vehicle box:
+
+```bash
+--plate-search-full-vehicle
+```
+
+## Output files
+
+```text
+runs/plate_test/
+├── tracked.mp4
+├── tracks.csv
+├── tracks.jsonl
+├── plates.csv
+├── plates.jsonl
+├── plate_crops/
+│   └── track_000027/
+│       └── frame_00000140_conf_0.912.jpg
+├── tile_plan.json                 # when --tile-plan was not supplied
+├── tile_plan_preview.jpg
+└── summary.json
+```
+
+`plates.csv` contains only current plate detector results. The plate columns in `tracks.csv` may show `current` or motion-projected `cached` plate boxes.
+
+## Short vehicle-only test
+
+Plate detection is disabled when `--plate-model` is omitted:
+
+```bash
+traffic-track \
+  --source /home/sachin/projects/traffic-detection/test.mp4 \
+  --roi configs/roi.custom.json \
+  --tile-plan configs/tile_plan.custom.json \
+  --model yolo26m.pt \
+  --classes car,motorcycle,bus,truck,bicycle \
+  --max-frames 100 \
+  --output-dir runs/vehicle_only
+```
+
+## Important tuning
+
+### Vehicles missed at the beginning or ROI boundary
+
+```text
+Increase --roi-tile-padding
+Increase --roi-detection-padding
+Increase --tile-overlap
+Keep --force-boundary-tiles enabled
+Do not use --mask-outside-roi initially
+```
+
+### Small or distant vehicles missed
+
+```text
+Reduce --tile-size, for example 960 -> 768
+Keep --imgsz 640 or increase it if CPU speed allows
+Use --one-to-many for higher recall at extra cost
+```
+
+A smaller source-pixel tile makes each object larger after resizing to the YOLO input, but increases the number of detector calls.
+
+### Plate not detected
+
+```text
+Lower --plate-conf from 0.20 to 0.10
+Use --plate-search-full-vehicle
+Reduce --plate-interval to 1
+Check plate crop pixel size
+Fine-tune the plate detector on frames from the same camera
+```
+
+### CPU too slow
+
+```text
+Increase --plate-interval, for example 2 -> 3
+Increase --tile-size to reduce tile count
+Keep --tile-batch-size 1
+Keep --plate-batch-size 1 or 2
+Use a nano plate detector
+```
+
+## Tests
+
+```bash
+PYTHONPATH=src python -m unittest discover -s tests -v
+```
+
+The tests cover ROI-anchored tiling, static tile-plan persistence, cross-tile duplicate merging, ByteTrack input conversion, class stabilization, and cached plate-box motion projection.

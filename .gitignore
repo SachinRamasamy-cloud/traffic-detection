@@ -1,149 +1,73 @@
-# -----------------------------
 # Python
-# -----------------------------
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
-*.pyd
-*.egg
-*.egg-info/
-.eggs/
-build/
-dist/
-wheels/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
 .coverage
-.coverage.*
 htmlcov/
 
-# -----------------------------
 # Virtual environments
-# -----------------------------
 .venv/
 venv/
 env/
 ENV/
-.python-version
 
-# -----------------------------
-# IDE / editor
-# -----------------------------
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+# Packaging
+build/
+dist/
+*.egg-info/
+pip-wheel-metadata/
 
-# -----------------------------
-# OS files
-# -----------------------------
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# -----------------------------
-# Environment / secrets
-# -----------------------------
-.env
-.env.*
-!.env.example
-*.key
-*.pem
-*.crt
-secrets/
-
-# -----------------------------
-# YOLO / ML model files
-# -----------------------------
+# Models and inference engines
 *.pt
 *.pth
 *.onnx
 *.engine
 *.torchscript
 *.tflite
-*.pb
-*.mlmodel
-*.safetensors
-*.weights
-*.ckpt
-models/
-weights/
-checkpoints/
+*.openvino/
+!models/.gitkeep
+!models/README.md
 
-# -----------------------------
-# Dataset and large media files
-# -----------------------------
-datasets/
-data/
-videos/
-images/
+# Videos and large media
 *.mp4
-*.mov
 *.avi
+*.mov
 *.mkv
 *.webm
-*.flv
-*.wmv
 *.m4v
-*.ts
-*.jpg
-*.jpeg
-*.png
-*.bmp
-*.tif
-*.tiff
+*.hevc
+*.h264
 
-# Keep explicitly tracked sample assets if needed
-!configs/*.json
-!tests/fixtures/**
-
-# -----------------------------
-# Tracking / inference outputs
-# -----------------------------
+# Generated runs and data
 runs/
 outputs/
-results/
-artifacts/
-logs/
-*.log
+plate_crops/
 *.jsonl
 *.csv
 
-# -----------------------------
-# Temporary files
-# -----------------------------
-tmp/
-temp/
-.cache/
-*.tmp
-*.temp
-*.bak
-*.orig
-
-# -----------------------------
-# Jupyter
-# -----------------------------
-.ipynb_checkpoints/
-
-# -----------------------------
-# Packaging / local install
-# -----------------------------
-*.egg-info/
-pip-wheel-metadata/
-
-# -----------------------------
-# Test-generated files
-# -----------------------------
-coverage.xml
-junit.xml
-
-# -----------------------------
-# Local ROI files
-# Keep example ROI committed; ignore user-generated ROIs
-# -----------------------------
+# User-specific ROI and tile plans
 configs/roi.custom.json
 configs/roi.curved.json
 configs/roi.local.json
+configs/tile_plan.custom.json
+configs/tile_plan.custom.jpg
+
+# Keep examples
+!configs/roi.example.json
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
