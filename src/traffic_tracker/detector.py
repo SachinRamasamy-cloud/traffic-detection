@@ -49,7 +49,14 @@ class YoloTileDetector:
     def names(self):
         return self.model.names
 
-    def detect(self, frame: np.ndarray, tiles: Sequence[Tile], roi: ROI) -> list[Detection]:
+    def detect(
+        self,
+        frame: np.ndarray,
+        tiles: Sequence[Tile],
+        roi: ROI,
+        tile_mask: np.ndarray | None = None,
+        acceptance_mask: np.ndarray | None = None,
+    ) -> list[Detection]:
         frame_height, frame_width = frame.shape[:2]
         all_detections: list[Detection] = []
 
@@ -59,7 +66,7 @@ class YoloTileDetector:
                 prepare_tile_image(
                     frame,
                     tile,
-                    roi_mask=roi.mask,
+                    roi_mask=roi.mask if tile_mask is None else tile_mask,
                     mask_outside_roi=self.mask_outside_roi,
                     mask_dilation=self.mask_dilation,
                 )
@@ -96,7 +103,7 @@ class YoloTileDetector:
                     global_box[[1, 3]] = np.clip(global_box[[1, 3]], 0, frame_height - 1)
                     if global_box[2] <= global_box[0] or global_box[3] <= global_box[1]:
                         continue
-                    if not roi.accepts_box(global_box):
+                    if not roi.accepts_box(global_box, mask=acceptance_mask):
                         continue
                     all_detections.append(
                         Detection(
