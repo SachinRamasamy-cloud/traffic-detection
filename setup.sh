@@ -11,3 +11,4 @@ python -m pip uninstall -y opencv-python-headless >/dev/null 2>&1 || true
 python -m pip install -e .
 
 echo "Setup complete. Activate with: source .venv/bin/activate"
+echo "For plate OCR, run: ./install_ocr.sh"
