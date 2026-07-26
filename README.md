@@ -318,3 +318,36 @@ PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
 The tests cover ROI-anchored tiling, static tile-plan persistence, cross-tile duplicate merging, ByteTrack input conversion, class stabilization, and cached plate-box motion projection.
+
+## Integrated plate-number OCR
+
+Install the optional recognition dependencies:
+
+```bash
+./install_ocr.sh
+source .venv/bin/activate
+```
+
+Enable OCR in the existing tracking command by adding:
+
+```bash
+--ocr \
+--ocr-model en_PP-OCRv5_mobile_rec \
+--ocr-min-score 0.20 \
+--ocr-min-plate-width 12 \
+--ocr-min-plate-height 4 \
+--ocr-confirm-observations 3
+```
+
+OCR output is written to:
+
+```text
+plate_numbers.json
+plate_numbers.csv
+plates.jsonl
+plates.csv
+tracks.jsonl
+tracks.csv
+```
+
+`plate_numbers.json` contains one temporally aggregated result per vehicle track. A provisional value becomes confirmed only after the configured number of matching observations, confidence threshold, and vote dominance are satisfied.

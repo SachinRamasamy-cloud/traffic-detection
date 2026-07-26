@@ -8,6 +8,8 @@ from pathlib import Path
 import numpy as np
 
 from traffic_tracker.anpr.memory import PlateMemory
+from traffic_tracker.anpr.ocr_engine import OCRRead, normalize_plate_text, unpack_recognition_result
+from traffic_tracker.anpr.temporal_consensus import PlateTextConsensus
 from traffic_tracker.nms import merge_detections
 from traffic_tracker.roi import load_roi
 from traffic_tracker.stabilization import TrackClassStabilizer
@@ -134,6 +136,46 @@ class CoreTests(unittest.TestCase):
         np.testing.assert_allclose(item.detection.xyxy, [240, 210, 320, 240], atol=1e-5)
         self.assertEqual(item.age_frames, 1)
         self.assertFalse(item.is_current)
+
+    def test_plate_text_normalization(self):
+        self.assertEqual(normalize_plate_text("kl 07-ab 1234"), "KL07AB1234")
+        self.assertEqual(normalize_plate_text("  MH.12 XY 9  "), "MH12XY9")
+
+    def test_unpack_paddle_result(self):
+        text, score = unpack_recognition_result(
+            {"res": {"rec_text": "KL 07 AB 1234", "rec_score": 0.91}}
+        )
+        self.assertEqual(text, "KL 07 AB 1234")
+        self.assertAlmostEqual(score, 0.91)
+
+    def test_plate_text_consensus_confirms_repeated_read(self):
+        consensus = PlateTextConsensus(
+            minimum_observations=3,
+            minimum_confirm_confidence=0.5,
+            minimum_dominance=0.6,
+        )
+        for frame_index in (10, 12, 14):
+            result = consensus.update(
+                OCRRead(
+                    vehicle_track_id=7,
+                    frame_index=frame_index,
+                    raw_text="KL 07 AB 1234",
+                    text="KL07AB1234",
+                    confidence=0.8,
+                    variant="clahe",
+                    accepted=True,
+                    plate_confidence=0.7,
+                    quality_score=0.8,
+                    sharpness=120.0,
+                    crop_width=100,
+                    crop_height=30,
+                    weighted_score=0.448,
+                )
+            )
+        self.assertIsNotNone(result)
+        self.assertEqual(result.text, "KL07AB1234")
+        self.assertEqual(result.status, "confirmed")
+        self.assertEqual(result.observation_count, 3)
 
     def test_class_stabilizer_rejects_one_frame_flip(self):
         stabilizer = TrackClassStabilizer(

@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "yolo26-midrange-roi-tracker"
-version = "0.2.0"
-description = "YOLO26m static ROI tiling, ByteTrack, and license-plate localization for Linux CPU workflows"
+version = "0.3.0"
+description = "YOLO26m static ROI tiling, ByteTrack, license-plate detection, and temporal OCR for Linux CPU workflows"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -14,6 +14,12 @@ dependencies = [
   "PyYAML>=6,<7",
   "ultralytics>=8.4.55,<8.5",
   "lap>=0.5.12,<1",
+]
+
+
+[project.optional-dependencies]
+ocr = [
+  "paddleocr>=3.3,<4",
 ]
 
 [project.scripts]
