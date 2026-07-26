@@ -1,0 +1,99 @@
+{
+  "version": 2,
+  "coordinate_space": "source_pixel",
+  "reference_frame": {
+    "width": 2560,
+    "height": 1440
+  },
+  "roi_digest": "86d341a774c95ead3b7c97e0c12b46da809e3a42ad79d76d1b3004efbf4c00c4",
+  "settings": {
+    "tile_size": 768,
+    "overlap": 0.2,
+    "minimum_roi_ratio": 0.005,
+    "roi_padding": 48,
+    "force_boundary_tiles": true,
+    "max_tiles": 0
+  },
+  "tiles": [
+    {
+      "index": 0,
+      "x": 0,
+      "y": 515,
+      "size": 768,
+      "valid_width": 768,
+      "valid_height": 768,
+      "roi_ratio": 0.9762098524305556,
+      "boundary_tile": true
+    },
+    {
+      "index": 1,
+      "x": 614,
+      "y": 515,
+      "size": 768,
+      "valid_width": 768,
+      "valid_height": 768,
+      "roi_ratio": 0.9274664984809028,
+      "boundary_tile": true
+    },
+    {
+      "index": 2,
+      "x": 1228,
+      "y": 515,
+      "size": 768,
+      "valid_width": 768,
+      "valid_height": 768,
+      "roi_ratio": 0.8115573459201388,
+      "boundary_tile": true
+    },
+    {
+      "index": 3,
+      "x": 1792,
+      "y": 515,
+      "size": 768,
+      "valid_width": 768,
+      "valid_height": 768,
+      "roi_ratio": 0.6828901502821181,
+      "boundary_tile": true
+    },
+    {
+      "index": 4,
+      "x": 0,
+      "y": 672,
+      "size": 768,
+      "valid_width": 768,
+      "valid_height": 768,
+      "roi_ratio": 1.0,
+      "boundary_tile": false
+    },
+    {
+      "index": 5,
+      "x": 614,
+      "y": 672,
+      "size": 768,
+      "valid_width": 768,
+      "valid_height": 768,
+      "roi_ratio": 1.0,
+      "boundary_tile": false
+    },
+    {
+      "index": 6,
+      "x": 1228,
+      "y": 672,
+      "size": 768,
+      "valid_width": 768,
+      "valid_height": 768,
+      "roi_ratio": 0.9857838948567709,
+      "boundary_tile": true
+    },
+    {
+      "index": 7,
+      "x": 1792,
+      "y": 672,
+      "size": 768,
+      "valid_width": 768,
+      "valid_height": 768,
+      "roi_ratio": 0.8873172336154513,
+      "boundary_tile": true
+    }
+  ]
+}

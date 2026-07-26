@@ -1,0 +1,39 @@
+{
+  "roi_id": "roi.test3",
+  "version": 1,
+  "coordinate_space": "source_pixel",
+  "reference_frame": {
+    "width": 1280,
+    "height": 720,
+    "frame_index": 0
+  },
+  "detection_geometry": {
+    "type": "Polygon",
+    "points": [
+      [
+        17.0,
+        35.0
+      ],
+      [
+        1256.0,
+        33.0
+      ],
+      [
+        1256.0,
+        685.0
+      ],
+      [
+        9.0,
+        707.0
+      ],
+      [
+        17.0,
+        35.0
+      ]
+    ]
+  },
+  "filtering": {
+    "rule": "bottom_center",
+    "minimum_intersection_ratio": 0.25
+  }
+}

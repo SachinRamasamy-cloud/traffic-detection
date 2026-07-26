@@ -1,0 +1,39 @@
+{
+  "version": 2,
+  "coordinate_space": "source_pixel",
+  "reference_frame": {
+    "width": 768,
+    "height": 432
+  },
+  "roi_digest": "e856a72ce364c3ec7614676ee65a73909c7c665338c50a32394ed9ad90e58c4d",
+  "settings": {
+    "tile_size": 512,
+    "overlap": 0.3,
+    "minimum_roi_ratio": 0.005,
+    "roi_padding": 48,
+    "force_boundary_tiles": true,
+    "max_tiles": 0
+  },
+  "tiles": [
+    {
+      "index": 0,
+      "x": 0,
+      "y": 0,
+      "size": 512,
+      "valid_width": 512,
+      "valid_height": 432,
+      "roi_ratio": 0.7192066333912037,
+      "boundary_tile": true
+    },
+    {
+      "index": 1,
+      "x": 256,
+      "y": 0,
+      "size": 512,
+      "valid_width": 512,
+      "valid_height": 432,
+      "roi_ratio": 0.5363136574074074,
+      "boundary_tile": true
+    }
+  ]
+}
