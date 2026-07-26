@@ -49,8 +49,6 @@ def draw_frame(
         if predicted:
             color = (0, 200, 255)
         elif not inside_exact_roi:
-            # Entry-margin track: accepted for continuity but not yet inside the
-            # exact user ROI.
             color = (255, 180, 0)
         else:
             color = (0, 255, 0)
@@ -62,6 +60,11 @@ def draw_frame(
         else:
             label += f" {record['confidence']:.2f}"
             cv2.rectangle(output, (x1, y1), (x2, y2), color, line_width)
+
+        plate_text = record.get("plate_text")
+        if plate_text:
+            marker = "" if record.get("plate_text_status") == "confirmed" else "?"
+            label += f" {plate_text}{marker}"
         _draw_label(output, label, x1, y1, color)
 
         plate = record.get("plate")
@@ -69,7 +72,11 @@ def draw_frame(
             px1, py1, px2, py2 = [int(round(value)) for value in plate["bbox_xyxy"]]
             plate_color = (0, 255, 255) if plate["state"] == "current" else (0, 180, 220)
             cv2.rectangle(output, (px1, py1), (px2, py2), plate_color, max(1, line_width))
-            plate_label = f"PLATE V{record['track_id']} {plate['confidence']:.2f}"
+            if plate_text:
+                status = "" if record.get("plate_text_status") == "confirmed" else "?"
+                plate_label = f"{plate_text}{status} V{record['track_id']}"
+            else:
+                plate_label = f"PLATE V{record['track_id']} {plate['confidence']:.2f}"
             if plate["state"] == "cached":
                 plate_label += f" C+{plate['age_frames']}"
             _draw_label(output, plate_label, px1, py1, plate_color, scale=0.43)

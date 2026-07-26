@@ -15,7 +15,7 @@ def project_root() -> Path:
 
 def parse_args(argv=None):
     parser = argparse.ArgumentParser(
-        description="YOLO26m static ROI-tile ByteTrack pipeline with optional number-plate detection"
+        description="YOLO26m static ROI-tile ByteTrack pipeline with plate detection and optional OCR"
     )
     parser.add_argument("--source", required=True)
     parser.add_argument("--roi", default="", help="ROI JSON path. Empty uses the complete frame.")
@@ -72,8 +72,7 @@ def parse_args(argv=None):
     parser.add_argument("--class-switch-ratio", type=float, default=1.75)
     parser.add_argument("--class-stale-frames", type=int, default=300)
 
-    # Phase-1 ANPR: plate localization only. OCR is deliberately not part of
-    # this stage so detector quality can be checked independently.
+    # ANPR plate localization.
     parser.add_argument("--plate-model", default="", help="One-class license-plate detector weights. Empty disables plate detection.")
     parser.add_argument("--plate-imgsz", type=int, default=640)
     parser.add_argument("--plate-conf", type=float, default=0.20)
@@ -95,6 +94,32 @@ def parse_args(argv=None):
     parser.add_argument("--save-plate-crops", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--save-only-best-plate-crop", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--draw-plates", action=argparse.BooleanOptionalAction, default=True)
+
+    # Recognition-only OCR runs on localized plate crops. Results are aggregated
+    # per ByteTrack vehicle ID using confidence-weighted temporal consensus.
+    parser.add_argument("--ocr", action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument("--ocr-model", default="en_PP-OCRv5_mobile_rec")
+    parser.add_argument("--ocr-device", default="cpu")
+    parser.add_argument("--ocr-engine", default="", help="Optional PaddleOCR engine, e.g. paddle_static or onnxruntime.")
+    parser.add_argument("--ocr-cpu-threads", type=int, default=4)
+    parser.add_argument("--ocr-enable-hpi", action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument("--ocr-batch-size", type=int, default=4)
+    parser.add_argument("--ocr-interval", type=int, default=1, help="Minimum frames between OCR attempts for the same vehicle track.")
+    parser.add_argument("--ocr-max-reads-per-track", type=int, default=12, help="0 allows unlimited OCR attempts per track.")
+    parser.add_argument("--ocr-target-height", type=int, default=96)
+    parser.add_argument("--ocr-max-width", type=int, default=640)
+    parser.add_argument("--ocr-min-score", type=float, default=0.20)
+    parser.add_argument("--ocr-min-text-length", type=int, default=4)
+    parser.add_argument("--ocr-max-text-length", type=int, default=14)
+    parser.add_argument("--ocr-min-plate-width", type=int, default=12)
+    parser.add_argument("--ocr-min-plate-height", type=int, default=4)
+    parser.add_argument("--ocr-min-sharpness", type=float, default=0.0)
+    parser.add_argument("--ocr-pattern", default="", help="Optional full-match regular expression for accepted plate text.")
+    parser.add_argument("--ocr-variants", default="colour,gray,clahe,sharpened")
+    parser.add_argument("--ocr-confirm-observations", type=int, default=3)
+    parser.add_argument("--ocr-confirm-score", type=float, default=0.50)
+    parser.add_argument("--ocr-confirm-dominance", type=float, default=0.60)
+    parser.add_argument("--ocr-history-size", type=int, default=30)
 
     parser.add_argument("--line-width", type=int, default=2)
     parser.add_argument("--draw-roi", action=argparse.BooleanOptionalAction, default=True)
@@ -146,6 +171,35 @@ def validate(args) -> None:
             raise ValueError("invalid plate aspect-ratio range")
         if args.plate_cache_frames < 0:
             raise ValueError("plate-cache-frames cannot be negative")
+
+    if args.ocr:
+        if not args.plate_model:
+            raise ValueError("--ocr requires --plate-model")
+        positive_names = (
+            "ocr_cpu_threads",
+            "ocr_batch_size",
+            "ocr_interval",
+            "ocr_target_height",
+            "ocr_max_width",
+            "ocr_min_text_length",
+            "ocr_max_text_length",
+            "ocr_min_plate_width",
+            "ocr_min_plate_height",
+            "ocr_confirm_observations",
+            "ocr_history_size",
+        )
+        if any(getattr(args, name) <= 0 for name in positive_names):
+            raise ValueError("OCR dimensions, intervals, batch sizes, and history values must be positive")
+        if args.ocr_max_reads_per_track < 0:
+            raise ValueError("ocr-max-reads-per-track cannot be negative")
+        if args.ocr_max_text_length < args.ocr_min_text_length:
+            raise ValueError("ocr-max-text-length must be >= ocr-min-text-length")
+        for name in ("ocr_min_score", "ocr_confirm_score", "ocr_confirm_dominance"):
+            value = getattr(args, name)
+            if not 0.0 <= value <= 1.0:
+                raise ValueError(f"--{name.replace('_', '-')} must be between 0 and 1")
+        if args.ocr_min_sharpness < 0:
+            raise ValueError("ocr-min-sharpness cannot be negative")
 
 
 def main(argv=None) -> int:

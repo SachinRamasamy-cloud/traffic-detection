@@ -34,6 +34,11 @@ TRACK_CSV_FIELDS = [
     "plate_y1",
     "plate_x2",
     "plate_y2",
+    "plate_text",
+    "plate_text_status",
+    "plate_text_confidence",
+    "plate_text_observations",
+    "plate_text_dominance",
 ]
 
 PLATE_CSV_FIELDS = [
@@ -55,6 +60,32 @@ PLATE_CSV_FIELDS = [
     "vehicle_y2",
     "search_region",
     "crop_path",
+    "ocr_attempted",
+    "ocr_raw_text",
+    "ocr_text",
+    "ocr_confidence",
+    "ocr_variant",
+    "ocr_accepted",
+    "ocr_quality_score",
+    "ocr_sharpness",
+    "plate_text",
+    "plate_text_status",
+    "plate_text_confidence",
+    "plate_text_observations",
+    "plate_text_dominance",
+]
+
+PLATE_NUMBER_CSV_FIELDS = [
+    "vehicle_track_id",
+    "plate_text",
+    "status",
+    "confidence",
+    "weighted_score",
+    "observation_count",
+    "total_accepted_observations",
+    "dominance",
+    "first_frame",
+    "last_frame",
 ]
 
 
@@ -139,6 +170,11 @@ class ResultExporter:
                     "plate_y1": plate_box[1],
                     "plate_x2": plate_box[2],
                     "plate_y2": plate_box[3],
+                    "plate_text": record.get("plate_text"),
+                    "plate_text_status": record.get("plate_text_status"),
+                    "plate_text_confidence": record.get("plate_text_confidence"),
+                    "plate_text_observations": record.get("plate_text_observations"),
+                    "plate_text_dominance": record.get("plate_text_dominance"),
                 }
             )
 
@@ -156,6 +192,7 @@ class ResultExporter:
         for plate in plate_records:
             x1, y1, x2, y2 = plate["bbox_xyxy"]
             vx1, vy1, vx2, vy2 = plate["vehicle_bbox_xyxy"]
+            ocr = plate.get("ocr") or {}
             self.plates_csv_writer.writerow(
                 {
                     "frame_index": frame_index,
@@ -176,6 +213,19 @@ class ResultExporter:
                     "vehicle_y2": vy2,
                     "search_region": plate["search_region"],
                     "crop_path": plate.get("crop_path"),
+                    "ocr_attempted": bool(ocr),
+                    "ocr_raw_text": ocr.get("raw_text"),
+                    "ocr_text": ocr.get("text"),
+                    "ocr_confidence": ocr.get("confidence"),
+                    "ocr_variant": ocr.get("variant"),
+                    "ocr_accepted": ocr.get("accepted"),
+                    "ocr_quality_score": ocr.get("quality_score"),
+                    "ocr_sharpness": ocr.get("sharpness"),
+                    "plate_text": plate.get("plate_text"),
+                    "plate_text_status": plate.get("plate_text_status"),
+                    "plate_text_confidence": plate.get("plate_text_confidence"),
+                    "plate_text_observations": plate.get("plate_text_observations"),
+                    "plate_text_dominance": plate.get("plate_text_dominance"),
                 }
             )
 
@@ -188,3 +238,18 @@ class ResultExporter:
         ):
             if handle:
                 handle.close()
+
+
+def write_plate_numbers(output_dir: Path, records: list[dict]) -> tuple[Path, Path]:
+    json_path = output_dir / "plate_numbers.json"
+    csv_path = output_dir / "plate_numbers.csv"
+    json_path.write_text(
+        json.dumps({"plate_numbers": records}, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    with csv_path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=PLATE_NUMBER_CSV_FIELDS)
+        writer.writeheader()
+        for record in records:
+            writer.writerow({key: record.get(key) for key in PLATE_NUMBER_CSV_FIELDS})
+    return json_path, csv_path

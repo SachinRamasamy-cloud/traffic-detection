@@ -1,0 +1,99 @@
+{
+  "version": 2,
+  "coordinate_space": "source_pixel",
+  "reference_frame": {
+    "width": 1280,
+    "height": 720
+  },
+  "roi_digest": "8deaa1d7bb161ef54427f00d051fe9ed384afada3b86bf6c399ada7d0fd851f1",
+  "settings": {
+    "tile_size": 512,
+    "overlap": 0.3,
+    "minimum_roi_ratio": 0.005,
+    "roi_padding": 48,
+    "force_boundary_tiles": true,
+    "max_tiles": 0
+  },
+  "tiles": [
+    {
+      "index": 0,
+      "x": 0,
+      "y": 0,
+      "size": 512,
+      "valid_width": 512,
+      "valid_height": 512,
+      "roi_ratio": 1.0,
+      "boundary_tile": false
+    },
+    {
+      "index": 1,
+      "x": 358,
+      "y": 0,
+      "size": 512,
+      "valid_width": 512,
+      "valid_height": 512,
+      "roi_ratio": 1.0,
+      "boundary_tile": false
+    },
+    {
+      "index": 2,
+      "x": 716,
+      "y": 0,
+      "size": 512,
+      "valid_width": 512,
+      "valid_height": 512,
+      "roi_ratio": 1.0,
+      "boundary_tile": false
+    },
+    {
+      "index": 3,
+      "x": 768,
+      "y": 0,
+      "size": 512,
+      "valid_width": 512,
+      "valid_height": 512,
+      "roi_ratio": 1.0,
+      "boundary_tile": false
+    },
+    {
+      "index": 4,
+      "x": 0,
+      "y": 208,
+      "size": 512,
+      "valid_width": 512,
+      "valid_height": 512,
+      "roi_ratio": 1.0,
+      "boundary_tile": false
+    },
+    {
+      "index": 5,
+      "x": 358,
+      "y": 208,
+      "size": 512,
+      "valid_width": 512,
+      "valid_height": 512,
+      "roi_ratio": 1.0,
+      "boundary_tile": false
+    },
+    {
+      "index": 6,
+      "x": 716,
+      "y": 208,
+      "size": 512,
+      "valid_width": 512,
+      "valid_height": 512,
+      "roi_ratio": 1.0,
+      "boundary_tile": false
+    },
+    {
+      "index": 7,
+      "x": 768,
+      "y": 208,
+      "size": 512,
+      "valid_width": 512,
+      "valid_height": 512,
+      "roi_ratio": 1.0,
+      "boundary_tile": false
+    }
+  ]
+}
