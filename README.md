@@ -39,3 +39,79 @@ studying vehicle tracking and ANPR;
 evaluating plate visibility before building a production system.
 
 It is not designed to guarantee an accurate registration number from every frame. OCR reliability depends heavily on the original plate pixel size, blur, camera angle, compression, lighting, and model generalization.
+
+2. Current capabilities
+
+Implemented
+
+Ultralytics yolo26m.pt vehicle detection.
+
+Polygon and freehand ROI drawing.
+
+Static tile coordinates generated once and reused for every frame.
+
+ROI-only tiling instead of blindly tiling the complete image.
+
+Tile overlap and ROI boundary protection.
+
+Global-coordinate restoration after tile inference.
+
+Cross-tile duplicate merging.
+
+One ByteTrack instance for the complete frame.
+
+ByteTrack Kalman motion prediction.
+
+Low-confidence ByteTrack recovery.
+
+Optional short Kalman-only prediction export.
+
+Confidence-weighted vehicle-class stabilization.
+
+Second-stage license-plate detection inside tracked vehicle crops.
+
+Plate-to-vehicle association using vehicle_track_id.
+
+Cached plate-box projection between scheduled plate detections.
+
+Plate crop saving.
+
+Recognition-only PaddleOCR integration.
+
+Multiple OCR preprocessing variants.
+
+OCR normalization to uppercase letters and digits.
+
+Confidence-weighted exact-text temporal consensus.
+
+Provisional and confirmed plate-number states.
+
+Annotated MP4 output.
+
+Vehicle CSV and JSONL output.
+
+Plate CSV and JSONL output.
+
+Final plate-number JSON and CSV output.
+
+Not implemented yet
+
+Four-corner plate detection.
+
+Perspective rectification using detected plate corners.
+
+Character-level temporal consensus.
+
+Indian-number-plate-specific OCR training.
+
+Multi-frame super-resolution.
+
+Appearance-based vehicle ReID.
+
+Automatic lane configuration.
+
+Production database integration.
+
+Privacy retention controls.
+
+Enforcement-grade validation.
